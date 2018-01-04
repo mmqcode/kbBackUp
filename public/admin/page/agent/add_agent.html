@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/main.css" />
+    <title>添加代理人</title>
+</head>
+
+<body>
+<div style="margin: 15px;">
+    <blockquote class="layui-elem-quote">
+        <a href="javascript:history.back();" class="layui-btn layui-btn-small">
+            返回
+        </a>
+    </blockquote>
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+        <legend>添加代理人</legend>
+    </fieldset>
+
+    <form class="layui-form"  id="formAdd">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户名:</label>
+            <div class="layui-input-block">
+                <input type="text" id="username" name="username"  required  autocomplete="off" placeholder="请输入账户名,登录用"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户密码:</label>
+            <div class="layui-input-block">
+                <input type="password" id="password" name="password"  required autocomplete="off" placeholder="请输入登录密码"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">重复密码:</label>
+            <div class="layui-input-block">
+                <input type="password" id="passwordconfirm" name="passwordconfirm"  required autocomplete="off" placeholder="请重复输入密码"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">真实姓名:</label>
+            <div class="layui-input-block">
+                <input type="text" id="name" name="name"  required autocomplete="off" placeholder="请输入姓名"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">手机:</label>
+            <div class="layui-input-block">
+                <input type="text" id="phone" name="phone"  autocomplete="off" placeholder="请输入手机"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">初批代理:</label>
+            <div class="layui-input-block">
+                <input type="checkbox" id="initialAgent" name="initialAgent" lay-filter="initialAgent"   autocomplete="off" title="初批代理"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" name="superAgentDiv">
+            <label class="layui-form-label">上级代理:</label>
+            <div class="layui-input-block">
+                <input type="text" id="superAgent" name="superAgent"  readonly="readonly" autocomplete="off" placeholder="点击选择"  class="layui-input">
+                <input type="hidden" id="superAgentId" value="">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">分成比例:</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="defaultAgentRate" lay-filter="defaultAgentRate" id="defaultAgentRate" title="默认" checked="checked">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">自有分成:</label>
+            <div class="layui-input-block">
+                <input type="text" id="selfRate" name="agentRate"    autocomplete="off" placeholder="请输入分成参数"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">一级分成:</label>
+            <div class="layui-input-block">
+                <input type="text" id="firstRate" name="agentRate"  autocomplete="off" placeholder="请输入分成参数"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">二级分成:</label>
+            <div class="layui-input-block">
+                <input type="text" id="secondRate" name="agentRate"   autocomplete="off" placeholder="请输入分成参数"  class="layui-input">
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" id="add">提交</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script>
+    layui.use(['form', 'laydate','upload'], function() {
+        var form = layui.form(),
+            layer = layui.layer,
+            laydate = layui.laydate,
+            $= layui.jquery;
+        form.render();
+        $(document).ready(function () {
+            var initialAgent = "0";
+//            $("#formAdd").on("click","div[name='roleCodeDiv'] div", function () {
+//                //改变上级代理人列表。
+//                var roleCode = $(this).prev().val();
+//                if(roleCode == "11"){
+//                    //添加总代理
+//                    $("div[name='superAgentDiv']").css("display","none");
+//                    $("select[name='superAgent']").empty();
+//                    var htmlContent = "<option value=''>请选择</option>";
+//                    $(htmlContent).appendTo("select[name='superAgent']");
+//                    form.render('select');
+//                }else if(roleCode == "12"){
+//                    //添加一级代理，加载所有总代理到select并显示
+//                    loadSuperAgent("11");
+//                }else if(roleCode == "13"){
+//                    loadSuperAgent("12");
+//
+//                }else{
+//
+//                }
+//            });
+
+            $("#superAgent").click(function () {
+                layer.open({
+                    type: 2,
+                    content: 'select_super_agents.html',
+                    area:['1200px','600px'],
+                    title:'选择上级代理',
+                    shadeClose:true
+                });
+            });
+
+            function loadSuperAgent(roleCode) {
+                $.ajax({
+                    url:"/agent/get_super_agents",
+                    type:"post",
+                    data:{
+                        "roleCode":roleCode
+                    },
+                    async:true,
+                    error:function () {
+
+                    },
+                    success:function (data) {
+                        if(data.code == "0"){
+                            var superAgentArray = data.data;
+                            if(superAgentArray.length == "0"){
+                                $("select[name='superAgent']").empty();
+                                var htmlContent = "<option value=''>请选择</option>";
+                                $(htmlContent).appendTo("select[name='superAgent']");
+                                form.render('select');
+                            }else{
+                                var htmlContent = "";
+                                $.map(superAgentArray, function (agent) {
+                                    var realname = agent.realname;
+                                    var id = agent._id;
+                                    $("select[name='superAgent']").empty();
+                                    htmlContent  += "<option value='"+id+"'>"+realname+"</option>";
+                                });
+                                if(htmlContent != ""){
+                                    $(htmlContent).appendTo("select[name='superAgent']");
+                                    form.render('select')
+                                }
+
+                            }
+//                            $(data.data).each(function () {
+//
+//                            });
+                            $("div[name='superAgentDiv']").css("display","");
+                        }
+                    }
+                });
+            }
+
+            //监听提交
+            //点击添加分类
+            $("#add").click(function () {
+                var username=$("#username").val();
+                var password=$("#password").val();
+                var passwordconfirm = $("#passwordconfirm").val();
+                var name = $("#name").val();
+                var roleCode = "";
+                var mysuperagent = $("#superAgentId").val();
+                var mysuperagentname = $("#superAgent").val()
+                var phone = $("#phone").val();
+                var selfRate = $("#selfRate").val();
+                var secondRate = $("#secondRate").val();
+                var firstRate = $("#firstRate").val();
+
+                //测试用户是否录入信息
+                if(username == "" || password == "" || passwordconfirm == ""|| name == ""
+                    || selfRate == "" || secondRate == "" || firstRate == ""){
+                    layer.alert('请填入相关信息', {icon: 2});
+                    return false;
+                }
+                if(initialAgent == "0" && (mysuperagent == "")){
+                    layer.alert('请填入相关信息', {icon: 2});
+                    return false;
+                }
+
+                if(password != passwordconfirm){
+                    layer.alert('两次密码填写不一致。', {icon: 2});
+                    return false;
+                }
+                var data = {username:username, rolecode:roleCode, password:password, realname:name, phone:phone,
+                    mysuperagentid:mysuperagent,mysuperagentname:mysuperagentname,
+                    firstRate:firstRate,selfRate:selfRate, secondRate:secondRate,
+                    initialAgent:initialAgent
+                };
+                $.ajax({
+                    url:"/agent/agent_add",
+                    type:"post",
+                    data:data,
+                    dataType:"json",
+                    async:true,
+                    error:function () {
+
+                    },
+                    success:function (data) {
+                        if(data.code == "0"){
+                            layer.alert('添加成功。',function (index) {
+                                $("#formAdd")[0].reset();
+                                $("div[name='superAgentDiv']").css("display","none");
+                                $("select[name='superAgent']").empty();
+                                var htmlContent = "<option value=''>请选择</option>";
+                                $(htmlContent).appendTo("select[name='superAgent']");
+                                form.render('select');
+                                layer.close(index);
+                            });
+                        }else{
+                            layer.alert(data.message, {icon: 2, time:2000});
+                        }
+                    }
+                });
+                return false;
+            });
+
+            loadDefaultAgentRate();
+
+            form.on("checkbox(defaultAgentRate)", function(data){
+                if(data.elem.checked){
+                    loadDefaultAgentRate();
+                }else{
+                    $("input[name='agentRate']").removeAttr("readonly").removeAttr("disabled")
+                }
+            });
+            form.on("checkbox(initialAgent)", function(data){
+                if(data.elem.checked){
+                    initialAgent = "1";
+                    $("div[name='superAgentDiv']").css("display","none");
+                }else{
+                    initialAgent = "0";
+                    $("div[name='superAgentDiv']").css("display","");
+                }
+            });
+
+        });
+
+        function loadDefaultAgentRate() {
+
+            $.ajax({
+                url:"/agent/load_agent_rate",
+                type:"post",
+                data:{
+                    time:new Date()
+                },
+                dataType:"json",
+                async:true,
+                error:function () {
+
+                },
+                success:function (data) {
+                    if(data.code == "0"){
+                        if(data.agentRate){
+                            $("#selfRate").val(data.agentRate.selfRate);
+                            $("#firstRate").val(data.agentRate.firstRate);
+                            $("#secondRate").val(data.agentRate.secondRate);
+                            $("input[name='agentRate']").attr("readonly", "readonly").attr("disabled", "disabled");
+                            form.render("input[name='agentRate']");
+                        }
+                    }
+                }
+
+            });
+            
+        }
+
+    });
+
+
+</script>
+</body>
+
+</html>

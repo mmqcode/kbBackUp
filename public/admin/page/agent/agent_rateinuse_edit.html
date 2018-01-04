@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/main.css" />
+</head>
+
+<body>
+<div style="margin: 15px;">
+    <form class="layui-form" name="editForm" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">代理人：</label>
+            <div class="layui-input-block">
+                <input type="text" id="name" name="name"  readonly="readonly"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">自有分成：</label>
+            <div class="layui-input-block">
+                <input type="text" id="selfRate" name="selfRate"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">下级代理分成：</label>
+            <div class="layui-input-block">
+                <input type="text" id="firstRate" name="firstRate"  autocomplete="off"  class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">次级代理分成：</label>
+            <div class="layui-input-block">
+                <input type="text" id="secondRate" name="secondRate"  autocomplete="off"  class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">分成系数：</label>
+            <div class="layui-input-block">
+                <input type="text" id="rateFactor" name="rateFactor"  autocomplete="off"  class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" id="edit">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script>
+    layui.config({
+        base:"../../plugins/layui/lay/modules"
+    });
+    layui.use(['form','upload'], function() {
+        var form = layui.form(),
+            layer = parent.layer === undefined ? layui.layer : parent.layer;
+        $ = layui.jquery;
+        $(document).ready(function () {
+            //var username = parent.$("span[name='toEdit']").text();
+            var parent$ = window.parent.layui.jquery;
+            var agentId = parent$("#toEdit").text();
+            $.ajax({
+                url:"/agent/load_agent_rateinuse",
+                type:"post",
+                data:{
+                    "agentId":agentId
+                },
+                dataType:"json",
+                error:function () {
+
+                },
+                success:function (data) {
+                    $("input[name='name']").val(data.agentRateInUse.agentName);
+                    $("input[name='selfRate']").val(data.agentRateInUse.selfRate);
+                    $("input[name='firstRate']").val(data.agentRateInUse.firstRate);
+                    $("input[name='secondRate']").val(data.agentRateInUse.secondRate);
+                    $("input[name='rateFactor']").val(data.agentRateInUse.rateFactor);
+                }
+
+            });
+        });
+        $("#edit").click(function () {
+            var realname = $("#realname").val();
+            var phone = $("#phone").val();
+            var password = $("#password").val();
+            if(realname == "" || realname == null||
+                phone == null|| phone == ""){
+                layer.alert('信息填写不完整!');
+                return false;
+            }
+            $.ajax({
+                url:"agent_rateinuse_edit",
+                type:"post",
+                data:$("form[name='editForm']").serialize(),
+                async:false,
+                dataType:"json",
+                error:function () {
+
+                },
+                success:function (data) {
+                    if(data.code == "0"){
+                        parent.location.reload();
+                        var index = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(index);
+
+                    }else{
+                        layer.alert(data.message);
+                        return false;
+                    }
+
+                }
+
+
+            });
+
+        });
+
+    });
+</script>
+</body>
+</html>

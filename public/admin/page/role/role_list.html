@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/global.css" media="all">
+    <link rel="stylesheet" href="../../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/table.css" />
+    <title>角色信息</title>
+</head>
+
+<body>
+<div class="admin-main">
+
+    <blockquote class="layui-elem-quote">
+        <a href="javascript:;" class="layui-btn layui-btn-small" id="refresh">
+            刷新数据
+        </a>
+        <a href="role_add.html" class="layui-btn layui-btn-small" >
+            添加角色
+        </a>
+    </blockquote>
+    <fieldset class="layui-elem-field">
+        <legend>数据列表</legend>
+        <div class="layui-field-box">
+            <table class="site-table table-hover">
+                <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>角色名称</th>
+                    <th>角色代码</th>
+                    <th>创建日期</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="tabContent">
+
+                </tbody>
+            </table>
+
+        </div>
+    </fieldset>
+    <div class="admin-table-page">
+        <div id="page" class="page">
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script type="text/javascript" src="../../js/moment.min.js"></script>
+<script>
+    layui.config({
+        base: '../../plugins/layui/modules/'
+        //base: '../../plugins/layui/lay/modules'
+    });
+
+    layui.use(['icheck', 'laypage','layer', 'laydate'], function() {
+        var $ = layui.jquery,
+            laypage = layui.laypage,
+            layer = parent.layer === undefined ? layui.layer : parent.layer,
+            laydate = layui.laydate;
+
+
+        //页面初始化的时候执行
+        $(function (){
+            getData(1);
+
+            $("#tabContent").on("click", ".layui-btn-danger", function () {
+                var dataid = $(this).siblings("span").text();
+                layer.confirm("确定要删除吗？",{icon:3, title:'提示'},function (index) {
+                    $.ajax({
+                        url:"/role/role_delete",
+                        type:"post",
+                        data:{
+                            id:dataid
+                        },
+                        dataType:"json",
+                        error:function (XMLHttpRequest, textStatus, errorThrown) {
+                            alert("textStatus:"+textStatus+",errorThrown:"+errorThrown);
+                        },
+                        success:function (data) {
+                            if(data.code == "0"){
+                                layer.alert(data.message, function (index) {
+                                    $("#refresh").trigger("click");
+                                    layer.close(index);
+                                });
+                            }else{
+                                layer.alert(data.message,{time:2000});
+                            }
+                        }
+                    });
+
+                })
+            });
+        });
+
+        //点击刷新按钮
+        $('#refresh').on('click', function() {
+            getData(1);
+            layer.msg('刷新成功');
+        });
+
+
+        //从后台获取数据函数，获取页数curr的数据
+        function getData(curr){
+            $.post("/role/roles_get",{curr:curr},function(result){
+                //拼接html内容
+                var tabContent="";
+                //获取后台json数据
+                var mydata=result.data;
+                var responseCentent;
+                for(var i=0;i<mydata.length;i++){
+                    if(mydata[i].responseContent){
+                        responseCentent = "<a href='javascript:void(0)l' name='resc'>查看</a><span style='display: none;'>"+mydata[i].responseContent+"</span>";
+                    }else{
+                        responseCentent = "";
+                    }
+                    var tempStr='<tr id='+mydata[i]._id+'>'+
+                        /*序号分页后也必须得变动,每页十条数据*/
+                        '<td>'+(i+(curr-1)*10+1)+'</td>'+
+                        '<td>'+mydata[i].rolename+'</td>'+
+                        '<td>'+mydata[i].rolecode+'</td>'+
+                        '<td>'+moment(mydata[i].createTime).format("YYYY-MM-DD HH:mm:ss")+'</td>'+
+                        '<td>'+
+                        '<span class="layui-btn layui-btn-danger layui-btn-mini">删除</span>'+
+                        '<span name="dataid" style="display: none;">'+mydata[i]._id+'</span>'+
+                        '</td>'+
+                        '</tr>'
+                    tabContent=tabContent+tempStr;
+                }
+                //将拼接好的数据填入#tabContent中
+                $("#tabContent").html(tabContent);
+                //显示分页
+                laypage({
+                    cont: 'page', //容器。值支持id名、原生dom对象，jquery对象。【如该容器为】：<div id="page1"></div>
+                    pages: result.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            getData(obj.curr);
+                        }
+                    }
+                });
+
+            });
+        };
+
+    });
+</script>
+</body>
+
+</html>

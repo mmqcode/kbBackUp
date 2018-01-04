@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/main.css" />
+</head>
+
+<body>
+<div style="margin: 15px;">
+    <form class="layui-form" name="editForm" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户名</label>
+            <div class="layui-input-block">
+                <input type="text" id="username" name="username"  readonly="readonly"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">真实姓名</label>
+            <div class="layui-input-block">
+                <input type="text" id="realname" name="realname"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">电话号码</label>
+            <div class="layui-input-block">
+                <input type="text" id="phone" name="phone"  autocomplete="off"  class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" id="edit">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    layui.config({
+        base:"plugins/layui/lay/modules"
+    });
+    layui.use(['form','upload'], function() {
+        var form = layui.form(),
+            layer = parent.layer === undefined ? layui.layer : parent.layer;
+            $ = layui.jquery;
+        $(document).ready(function () {
+            //var username = parent.$("span[name='toEdit']").text();
+            var parent$ = window.parent.layui.jquery;
+            var username = parent$("#toEdit").text();
+            $.ajax({
+                url:"user_get",
+                type:"post",
+                data:{
+                    "username":username
+                },
+                dataType:"json",
+                error:function () {
+
+                },
+                success:function (data) {
+                    $("input[name='username']").val(data.user[0].username);
+                    $("input[name='realname']").val(data.user[0].realname);
+                    $("input[name='password']").val(data.user[0].password);
+                    $("input[name='phone']").val(data.user[0].phone);
+                }
+
+            });
+        });
+        $("#edit").click(function () {
+            var realname = $("#realname").val();
+            var phone = $("#phone").val();
+            var password = $("#password").val();
+            if(realname == "" || realname == null||
+                phone == null|| phone == ""){
+                layer.alert('信息填写不完整!');
+                return false;
+            }
+            $.ajax({
+                url:"user_edit",
+                type:"post",
+                data:$("form[name='editForm']").serialize(),
+                async:false,
+                dataType:"json",
+                error:function () {
+                    
+                },
+                success:function (data) {
+                    if(data.code == "0"){
+                        parent.location.reload();
+                        var index = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(index);
+
+                    }else{
+                        layer.alert(data.message);
+                        return false;
+                    }
+                    
+                }
+
+
+            });
+            
+        });
+
+    });
+</script>
+</body>
+</html>

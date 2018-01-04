@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>KingsBoom后台</title>
+		<meta name="renderer" content="webkit">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="format-detection" content="telephone=no">
+
+		<link rel="stylesheet" href="/admin/plugins/layui/css/layui.css" media="all" />
+		<link rel="stylesheet" href="/admin/css/global.css" media="all">
+		<link rel="stylesheet" href="/admin/plugins/font-awesome/css/font-awesome.min.css">
+
+	</head>
+
+	<body>
+		<div class="layui-layout layui-layout-admin">
+			<div class="layui-header header header-demo">
+				<div class="layui-main">
+					<div class="admin-login-box">
+						<a class="logo" style="left: 0;" href="/admin">
+							<span style="font-size: 22px;">KingsBoom后台</span>
+						</a>
+						<div class="admin-side-toggle">
+							<i class="fa fa-bars" aria-hidden="true"></i>
+						</div>
+					</div>
+					<ul class="layui-nav admin-header-item">
+						<li class="layui-nav-item">
+							<span><a href="javascript:void(0);"><%=username%>(<%=isSuper%>)</a></span>
+						</li>
+						<li class="layui-nav-item">
+							<a href="javascript:void(0);" name="changePasswordA"><i class="fa fa-lock"></i> 修改密码</a>
+						</li>
+						<li class="layui-nav-item" >
+							<a href="/logout"><i class="fa fa-sign-out"></i> 注销</a>
+						</li>
+
+					</ul>
+
+				</div>
+			</div>
+			<div class="layui-side layui-bg-black" id="admin-side">
+				<div class="layui-side-scroll" id="admin-navbar-side" lay-filter="side"></div>
+			</div>
+			<div class="layui-body" style="bottom: 0;border-left: solid 2px #1AA094;" id="admin-body">
+				<div class="layui-tab admin-nav-card layui-tab-brief" lay-filter="admin-tab">
+					<ul class="layui-tab-title">
+						<li class="layui-this">
+							<i class="fa fa-dashboard" aria-hidden="true"></i>
+							<cite>主页</cite>
+						</li>
+					</ul>
+					<div class="layui-tab-content" style="min-height: 150px; padding: 5px 0 0 0;">
+						<div class="layui-tab-item layui-show">
+							<iframe src="/admin/main.html"></iframe>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-footer footer footer-demo" id="admin-footer">
+				<div class="layui-main">
+					<p>2017 &copy;
+						<a href="/">KingsBoom后台管理系统</a>
+					</p>
+				</div>
+			</div>
+			<div class="site-tree-mobile layui-hide">
+				<i class="layui-icon">&#xe602;</i>
+			</div>
+
+			
+			<script type="text/javascript" src="/admin/plugins/layui/layui.js"></script>
+			<script type="text/javascript" src="/admin/datas/nav.js"></script>
+			<script src="/admin/js/index.js"></script>
+			<script>
+				layui.use('layer', function() {
+					var $ = layui.jquery,
+						layer = layui.layer;
+					var index;
+					$("a[name='changePasswordA']").click(function () {
+                        index = layer.open({
+							type:1,
+							content:$("div[name='changePasswordDiv']"),
+							area:'400px',
+							title:'修改密码'
+						});
+                    });
+					$("button[name='doChangePassword']").click(function () {
+						var newPassword = $("input[name='newPassword']").val();
+						var oldPassword = $("input[name='oldPassword']").val();
+						var passwordConfirm = $("input[name='passwordConfirm']").val();
+						if(newPassword == "" || oldPassword == "" || passwordConfirm == ""){
+                            layer.alert('数据未填写完整!');
+                            return false;
+                        }
+                        if(newPassword != passwordConfirm){
+                            layer.alert('新密码两次填写不一致!');
+                            return false;
+						}
+						$.ajax({
+							url:"/admin/change_password",
+							type:"post",
+							data:$("#form").serialize(),
+							dataType:"json",
+							error:function () {
+								
+                            },
+							success:function (data) {
+							    if(data.code == "0"){
+							        layer.close(index);
+								}else{
+							        layer.alert(data.status);
+								}
+                            }
+
+						});
+
+                    });
+				});
+			</script>
+		</div>
+	<div name="changePasswordDiv" style="display: none;">
+		<br>
+		<form class="layui-form" id="form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">原密码:</label>
+				<div class="layui-input-inline">
+					<input type="password" name="oldPassword" value="" required lay-verify="required" placeholder="请输入原密码" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">新密码:</label>
+				<div class="layui-input-inline">
+					<input type="password" name="newPassword" value="" required lay-verify="required" placeholder="请输入新密码" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">确认:</label>
+				<div class="layui-input-inline">
+					<input type="password" name="passwordConfirm" value="" required lay-verify="required" placeholder="请确认密码" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" name="doChangePassword">提 交</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	</body>
+
+</html>

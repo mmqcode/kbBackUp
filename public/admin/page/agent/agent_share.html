@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/global.css" media="all">
+    <link rel="stylesheet" href="../../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/table.css" />
+</head>
+
+<body>
+<div class="admin-main">
+    <blockquote class="layui-elem-quote">
+        <a href="javascript:;" class="layui-btn layui-btn-small" id="refresh">
+            刷新数据
+        </a>
+        <a href="javascript:;" class="layui-btn layui-btn-small" id="calc">
+            导出报表
+        </a>
+    </blockquote>
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <input type="text" name="realname" id="realname"  placeholder="姓名" autocomplete="off" class="layui-input">
+            </div>
+            <button class="layui-btn" id="doSearch">查 询</button>
+        </div>
+    </form>
+    <fieldset class="layui-elem-field">
+        <legend>数据列表</legend>
+        <div class="layui-field-box">
+            <table class="site-table table-hover">
+                <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>代理人姓名</th>
+                    <th>当次佣金</th>
+                    <th>来源</th>
+                    <th>充值客户名称</th>
+                    <th>充值金额</th>
+                    <th>创建日期</th>
+                </tr>
+                </thead>
+                <tbody id="tabContent">
+
+                </tbody>
+            </table>
+
+        </div>
+    </fieldset>
+    <div class="admin-table-page">
+        <div id="page" class="page">
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script type="text/javascript" src="../../js/moment.min.js"></script>
+<script>
+    layui.config({
+        base: '../../plugins/layui/modules/'
+    });
+
+    layui.use(['icheck', 'laypage','layer', 'form'], function() {
+        var $ = layui.jquery,
+            laypage = layui.laypage,
+            //layer = parent.layer === undefined ? layui.layer : parent.layer;
+            layer = layui.layer,
+            form = layui.form;
+
+        //页面初始化的时候执行
+        $(function (){
+            getData(1, null, null);
+
+        });
+
+        //点击刷新按钮
+        $('#refresh').on('click', function() {
+            getData(1, null, null);
+            layer.msg('刷新成功',{time:1000});
+        });
+
+
+        $("#tabContent").on("click", ".layui-btn-primary", function(){
+            var id = $(this).parent("tr").attr("id");
+
+        });
+
+        $("#doSearch").click(function () {
+            var realname = $("#").val();
+            var rolecode = $("#").val();
+            getData(1, rolecode, realname);
+            return false;
+        });
+
+        //从后台获取数据函数，获取页数curr的数据
+        function getData(curr, rolecode, realname){
+            var index = layer.open({
+                type:"3",
+                content:"加载中..",
+                title:false
+            });
+            $.post("/agent/get_agent_share_detail",{curr:curr},function(result){
+                //拼接html内容
+                var tabContent="";
+                //获取后台json数据
+                var mydata=result.data;
+                var customerName;
+                var customerChargeAmount;
+
+
+                for(var i=0;i<mydata.length;i++){
+                    if(mydata[i].customerName){
+                        customerName = mydata[i].customerName;
+                    }else{
+                        customerName = "";
+                    }
+                    if(mydata[i].customerChargeAmount){
+                        customerChargeAmount = mydata[i].customerChargeAmount;
+                    }else{
+                        customerChargeAmount = "";
+                    }
+                    var tempStr='<tr id='+mydata[i]._id+'>'+
+                        /*序号分页后也必须得变动,每页十条数据*/
+                        '<td>'+(i+(curr-1)*10+1)+'</td>'+
+                        '<td>'+mydata[i].agentName+'</td>'+
+                        '<td>'+mydata[i].amount+'</td>'+
+                        '<td>'+mydata[i].source+'</td>'+
+                        '<td>'+customerName+'</td>'+
+                        '<td>'+customerChargeAmount+'</td>'+
+                        '<td>'+moment(mydata[i].createTime).format("YYYY-MM-DD HH:mm:ss")+'</td>'+
+                        '</tr>'
+                    tabContent=tabContent+tempStr;
+                }
+                //将拼接好的数据填入#tabContent中
+                $("#tabContent").html(tabContent);
+                //显示分页
+                laypage({
+                    cont: 'page', //容器。值支持id名、原生dom对象，jquery对象。【如该容器为】：<div id="page1"></div>
+                    pages: result.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            getData(obj.curr);
+                        }
+                    }
+                });
+                layer.close(index);
+            });
+        };
+    });
+</script>
+</body>
+</html>

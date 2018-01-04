@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/global.css" media="all">
+    <link rel="stylesheet" href="../../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/table.css" />
+</head>
+
+<body>
+<div class="admin-main">
+    <blockquote class="layui-elem-quote">
+        <a href="javascript:;" class="layui-btn layui-btn-small" id="refresh">
+            刷新数据
+        </a>
+        <a href="add_agent.html" class="layui-btn layui-btn-small" >
+            添加代理人
+        </a>
+    </blockquote>
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <input type="text" name="realname" id="realname"  placeholder="姓名" autocomplete="off" class="layui-input">
+            </div>
+            <button class="layui-btn" id="doSearch">查 询</button>
+        </div>
+    </form>
+    <fieldset class="layui-elem-field">
+        <legend>数据列表</legend>
+        <div class="layui-field-box">
+            <table class="site-table table-hover">
+                <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>用户名</th>
+                    <th>代理人姓名</th>
+                    <th>上级代理人</th>
+                    <th>创建日期</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="tabContent">
+
+                </tbody>
+            </table>
+
+        </div>
+    </fieldset>
+    <div class="admin-table-page">
+        <div id="page" class="page">
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script type="text/javascript" src="../../js/moment.min.js"></script>
+<script>
+    layui.config({
+        base: '../../plugins/layui/modules/'
+    });
+
+    layui.use(['icheck', 'laypage','layer', 'form'], function() {
+        var $ = layui.jquery,
+            laypage = layui.laypage,
+            //layer = parent.layer === undefined ? layui.layer : parent.layer;
+            layer = layui.layer,
+        form = layui.form;
+
+        //页面初始化的时候执行
+        $(function (){
+            getData(1, null, null);
+            $("#tabContent").on("click", "span[name='editInRate']",function () {
+                var agentId = $(this).parent().parent().attr("id");
+                console.log(agentId);
+                $("span[name='toEdit']").text(agentId);
+                var index = layer.open({
+                    type:2,
+                    area: ['600px','500px'],
+                    title:"编辑代理人分成比例",
+                    content:"agent_rateinuse_edit.html",
+                    success:function (layero, index) {
+                    }
+                });
+                return false;
+            });
+
+        });
+
+        //点击刷新按钮
+        $('#refresh').on('click', function() {
+            getData(1, null, null);
+            layer.msg('刷新成功');
+        });
+
+
+        $("#tabContent").on("click", ".layui-btn-primary", function(){
+            var id = $(this).parent("tr").attr("id");
+
+        });
+
+        $("#doSearch").click(function () {
+            var realname = $("#realname").val();
+            var rolecode = $("#rolecode").val();
+            getData(1, rolecode, realname);
+            return false;
+        });
+
+        /*删除*/
+        $('#tabContent').on('click', '.layui-btn-danger', function() {
+            var obj = $(this);
+            var id = obj.parents('tr').attr('id');
+            layer.confirm('确认要删除吗？', {
+                icon: 0,
+                title: '警告',
+                shade: false
+            }, function(index) {
+                $.post("",{id:id},function(result){
+                    if(result.status==="success"){
+                        $(obj).parents("tr").remove(); //删除方法
+                        layer.msg('已删除!', {
+                            icon: 1,
+                            time: 1000
+                        });
+                        getData(1);
+                    }else if(result.status==="noRight"){
+                        layer.msg('你不是超级管理员，无法删除!', {
+                            icon: 1,
+                            time: 1000
+                        });
+                    }
+                    else{
+                        layer.msg('删除失败!', {
+                            icon: 1,
+                            time: 1000
+                        });
+                    }
+                });
+            });
+        });
+
+
+        //从后台获取数据函数，获取页数curr的数据
+        function getData(curr, rolecode, realname){
+           var index = layer.open({
+                type:"3",
+                content:"加载中..",
+                title:false
+            });
+            $.post("/agent/agents_get",{curr:curr, rolecode:rolecode, realname:realname},function(result){
+                //拼接html内容
+                var tabContent="";
+                //获取后台json数据
+                var mydata=result.data;
+                var roleCodeCH = "";
+                var mysuperagentname;
+
+                for(var i=0;i<mydata.length;i++){
+                    mysuperagentname = mydata[i].mysuperagentname;
+
+                    var tempStr='<tr id='+mydata[i]._id+'>'+
+                        /*序号分页后也必须得变动,每页十条数据*/
+                        '<td>'+(i+(curr-1)*10+1)+'</td>'+
+                        '<td name="username">'+mydata[i].username+'</td>'+
+                        '<td>'+mydata[i].realname+'</td>'+
+                        '<td>'+mysuperagentname+'</td>'+
+                        '<td>'+moment(mydata[i].createTime).format("YYYY-MM-DD HH:mm:ss")+'</td>'+
+                        '<td>'+
+                        '<span class="layui-btn layui-btn-primay layui-btn-mini" name="editUserSpan">编辑</span>&nbsp;&nbsp;&nbsp;'+
+                        '<span class="layui-btn layui-btn-primay layui-btn-mini" name="editInRate">调整比例</span>&nbsp;&nbsp;&nbsp;'+
+                        '<span class="layui-btn layui-btn-danger layui-btn-mini">删除</span>'+
+                        '</td>'+
+                        '</tr>'
+                    tabContent=tabContent+tempStr;
+                }
+                //将拼接好的数据填入#tabContent中
+                $("#tabContent").html(tabContent);
+                //显示分页
+                laypage({
+                    cont: 'page', //容器。值支持id名、原生dom对象，jquery对象。【如该容器为】：<div id="page1"></div>
+                    pages: result.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            getData(obj.curr);
+                        }
+                    }
+                });
+                layer.close(index);
+            });
+        };
+    });
+</script>
+<span style="display: none;" name="toEdit" id="toEdit"></span>
+</body>
+</html>

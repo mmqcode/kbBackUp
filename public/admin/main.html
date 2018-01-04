@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="css/global.css" media="all">
+	<link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/table.css" />
+</head>
+
+<body>
+<div class="admin-main">
+	<h2>Welcome!</h2>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+	layui.config({
+		base: 'plugins/layui/modules/'
+	});
+
+	layui.use(['icheck', 'laypage','layer'], function() {
+		var $ = layui.jquery,
+				laypage = layui.laypage,
+				layer = parent.layer === undefined ? layui.layer : parent.layer;
+	});
+</script>
+</body>
+
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../css/global.css" media="all">
+    <link rel="stylesheet" href="../../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/table.css" />
+</head>
+
+<body>
+<div class="admin-main">
+
+    <blockquote class="layui-elem-quote">
+        <a href="javascript:;" class="layui-btn layui-btn-small" id="refresh">
+            刷新数据
+        </a>
+
+    </blockquote>
+    <form class="layui-form" action="">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="text" name="title"  lay-verify="required" placeholder="昵称搜索，支持模糊" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="text" name="startDate" id="startDate"  lay-verify="required" placeholder="起始日期" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <span style="display: inline; margin-left: -20px;">--</span>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="text" name="startDate" id="endDate"  lay-verify="required" placeholder="终止日期" autocomplete="off" class="layui-input">
+                </div>
+                <button class="layui-btn" id="doSearch">查 询</button>
+            </div>
+
+        </div>
+    </form>
+    <fieldset class="layui-elem-field">
+        <legend>数据列表</legend>
+        <div class="layui-field-box">
+            <table class="site-table table-hover">
+                <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>昵称</th>
+                    <th>充值金额</th>
+                    <th>余额</th>
+                    <th>创建日期</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="tabContent">
+
+                </tbody>
+            </table>
+
+        </div>
+    </fieldset>
+    <div class="admin-table-page">
+        <div id="page" class="page">
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../../plugins/layui/layui.js"></script>
+<script type="text/javascript" src="../../js/moment.min.js"></script>
+<script>
+    layui.config({
+        base: '../../plugins/layui/modules/'
+        //base: '../../plugins/layui/lay/modules'
+    });
+
+    layui.use(['icheck', 'laypage','layer', 'laydate'], function() {
+        var $ = layui.jquery,
+            laypage = layui.laypage,
+            layer = parent.layer === undefined ? layui.layer : parent.layer,
+            laydate = layui.laydate;
+
+
+        //页面初始化的时候执行
+        $(function (){
+            getData(1);
+
+            $("#startDate").click(function () {
+                laydate({
+                    elem:this,
+                    event: 'click', //触发事件
+                    format: 'YYYY-MM-DD' //日期格式
+                });
+            });
+            $("#endDate").click(function () {
+
+                laydate({
+                    elem:this,
+                    event: 'click', //触发事件
+                    format: 'YYYY-MM-DD' //日期格式
+                });
+                
+            });
+        });
+
+        $("#doSearch").click(function () {
+            
+        });
+
+        //点击刷新按钮
+        $('#refresh').on('click', function() {
+            getData(1, null, null, null, null);
+            layer.msg('刷新成功');
+        });
+        //从后台获取数据函数，获取页数curr的数据
+        function getData(curr, nickName, startDate, endDate){
+            $.post("/customer/chargingRecord_get",
+                {curr:curr, nickName:nickName, },
+                function(result){
+                //拼接html内容
+                var tabContent="";
+                //获取后台json数据
+                var mydata=result.data;
+
+                for(var i=0;i<mydata.length;i++){
+                    var tempStr='<tr id='+mydata[i]._id+'>'+
+                        /*序号分页后也必须得变动,每页十条数据*/
+                        '<td>'+(i+(curr-1)*10+1)+'</td>'+
+                        '<td>'+mydata[i].customerName+'</td>'+
+                        '<td>'+mydata[i].amount+'</td>'+
+                        '<td>'+mydata[i].total+'</td>'+
+                        '<td>'+moment(mydata[i].createTime).format("YYYY-MM-DD HH:mm:ss")+'</td>'+
+                        '<td>'+
+                        '<span class="layui-btn layui-btn-primay layui-btn-mini" name="editUserSpan">编辑</span>&nbsp;&nbsp;'+
+                        '<span class="layui-btn layui-btn-danger layui-btn-mini">删除</span>'+
+                        '</td>'+
+                        '</tr>'
+                    tabContent=tabContent+tempStr;
+                }
+                //将拼接好的数据填入#tabContent中
+                $("#tabContent").html(tabContent);
+                //显示分页
+                laypage({
+                    cont: 'page', //容器。值支持id名、原生dom对象，jquery对象。【如该容器为】：<div id="page1"></div>
+                    pages: result.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            getData(obj.curr);
+                        }
+                    }
+                });
+
+            });
+        };
+
+    });
+</script>
+</body>
+
+</html>
